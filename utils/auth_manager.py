@@ -1,0 +1,34 @@
+
+import json
+import bcrypt
+import os
+
+USER_DB_PATH = "data/users.json"
+
+def load_users():
+    if not os.path.exists(USER_DB_PATH):
+        return {}
+    with open(USER_DB_PATH, "r") as f:
+        return json.load(f)
+
+def save_users(users):
+    with open(USER_DB_PATH, "w") as f:
+        json.dump(users, f, indent=4)
+
+def signup_user(username, password):
+    users = load_users()
+    if username in users:
+        return False, "Username already exists."
+    hashed_pw = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    users[username] = hashed_pw
+    save_users(users)
+    return True, "Signup successful."
+
+def authenticate_user(username, password):
+    users = load_users()
+    if username not in users:
+        return False, "Username not found."
+    hashed_pw = users[username].encode()
+    if bcrypt.checkpw(password.encode(), hashed_pw):
+        return True, "Login successful."
+    return False, "Incorrect password."
